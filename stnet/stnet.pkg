@@ -1,4 +1,10 @@
-D 'seqtte': Sequential target trial emulation Use seqtte With STATA 19
+D 'stnet': Estimating net survival Use stnet With STATA 19
 D
-F seqtte.ado
-F seqtte.sthlp
+F esteve.ado
+F ht.ado
+F rs.ado
+F stata.toc
+F stnet.ado
+F stnet.sthlp
+F strs.ado
+F strs.hlp
