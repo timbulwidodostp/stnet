@@ -1,0 +1,403 @@
+{smcl}
+{cmd:help strs}{right: ({browse "http://www.stata-journal.com/article.html?article=st0376":SJ15-1: st0376})}
+{hline}
+
+{title:Title}
+
+{p2colset 5 13 15 2}{...}
+{p2col :{hi:strs} {hline 2}}Estimating relative survival{p_end}
+{p2colreset}{...}
+
+
+{title:Syntax}
+
+{p 8 11 2}
+{cmd:strs}
+{cmd:using} {it:filename} 
+{ifin}
+{weight}{cmd:,}
+{cmdab:m:ergeby}{cmd:(}{it:varlist}{cmd:)}
+{cmdab:br:eaks}{cmd:(}{it:numlist}{cmd:)}
+[{cmdab:by}{cmd:(}{it:varlist}{cmd:)}
+{cmdab:diagage}{cmd:(}{it:varname}{cmd:)}
+{cmdab:diagyear}{cmd:(}{it:varname}{cmd:)}
+{cmdab:attage}{cmd:(}{it:newvar}{cmd:)}
+{cmdab:attyear}{cmd:(}{it:newvar}{cmd:)}
+{cmdab:surv:prob}{cmd:(}{it:varname}{cmd:)}
+{cmdab:maxage}{cmd:(}{it:#}{cmd:)}
+{cmdab:pot:fu}{cmd:(}{it:varname}{cmd:)}
+{cmdab:ed:erer1}
+{cmd:pohar}
+{cmd:ht}
+{cmdab:calye:ar}
+{cmd:cuminc}
+{cmdab:stand:strata}{cmd:(}{it:varname}{cmd:)}
+{cmdab:brenner}
+{cmdab:li:st}{cmd:(}{it:varlist}{cmd:)}
+{cmdab:keep}{cmd:(}{it:varlist}{cmd:)}
+{cmdab:f:ormat:(%}{it:fmt}{cmd:)}
+{cmdab:notab:les}
+{cmdab:l:evel}{cmd:(}{it:#}{cmd:)}
+{cmd:save[(replace)]}
+{cmdab:savst:and(}{it:filename}[{cmd:,replace}]{cmd:)} 
+{cmdab:savin:d(}{it:filename}[{cmd:,replace}]{cmd:)} 
+{cmdab:savgr:oup(}{it:filename}[{cmd:,replace}]{cmd:)}]
+
+{pstd}{cmd:strs} is for use with survival-time data (see {helpb st}). You must
+{helpb stset} your data using the {cmd:id()} option with time since entry in
+years as the timescale before using {cmd:strs}. 
+
+{pstd}{cmd:iweight}s are allowed; see {help weights} and see the example below
+using weights. Weights must be specified as follows: {cmd:[iweight=}{it:varname}{cmd:]}.
+
+
+{title:Description}
+
+{pstd}{cmd:strs} estimates relative survival using actuarial methods and
+displays the results in life tables stratified by the variables
+specified in the {cmd:by()} option.  Expected survival can be calculated
+using the Ederer I, Ederer II, or Hakulinen methods. {cmd:strs} may be
+used for period analysis and to compute adjusted (weighted) estimates.
+
+{pstd}{cmd:using} {it:filename} specifies a file containing general-population survival probabilities (conditional probabilities of
+surviving one year), typically stratified by age, sex, and calendar
+year.  Age must be specified in one-year increments (typically from 0 to
+99) and calendar year in one-year intervals.
+
+{pstd}The data must be sorted by the variables specified in
+{cmd:mergeby()}.  Default names for variables in this file are {cmd:prob}
+for the survival probabilities (see the {cmd:survprob()} option),
+{cmd:_age} for age (see the {cmd:attage()} option), and {cmd:_year} for
+calendar year (see the {cmd:attyear()} option).
+
+
+{title:Options}
+
+{phang}{cmd:mergeby}{cmd:(}{it:varlist}{cmd:)} specifies the variables
+that uniquely determine the records in the file of general-population
+survival probabilities (the {cmd:using} file, also known as the
+{cmd:popmort.dta} file).  The {cmd:using} file must be sorted by these
+variables because the patient file and {cmd:using} file are merged
+according to these variables.  {cmd:mergeby()} is required.
+
+{phang}{cmd:breaks}{cmd:(}{it:numlist}{cmd:)} specifies the
+cutpoints for the life-table intervals as an ascending {it:numlist}
+commencing at 0.  The cutpoints need not be integers nor equidistant,
+but the units must be years; for example, specify
+{cmd:breaks(0(0.0833)5)} for monthly intervals up to five years.
+{cmd:breaks()} is required.
+
+{phang}{cmd:by}{cmd:(}{it:varlist}{cmd:)} specifies the life-table
+stratification variables.  One life table is estimated for each
+combination of these variables.
+
+{phang}{cmd:diagage}{cmd:(}{it:varname}{cmd:)} specifies the variable
+containing age at diagnosis in years, which does not have to contain integer
+values.  The default is {cmd:diagage(age)}.
+
+{phang}{cmd:diagyear}{cmd:(}{it:varname}{cmd:)} specifies the variable
+containing calendar year of diagnosis.  The default is
+{cmd:diagyear(yydx)}.
+
+{phang}{cmd:attage}{cmd:(}{it:newvar}{cmd:)} specifies the variable
+containing attained age (that is, age at the time of follow-up).  This
+variable cannot exist in the patient data file (it is created as the
+integer part of age at diagnosis plus follow-up time) but must exist in
+the {cmd:using} file.  The default is {cmd:attage(_age)}.
+
+{phang}{cmd:attyear}{cmd:(}{it:newvar}{cmd:)} specifies the variable
+containing attained calendar year (that is, calendar year at the time of
+follow-up).  This variable cannot exist in the patient data file (it is
+created as the integer part of year of diagnosis plus follow-up time)
+but must exist in the {cmd:using} file.  The default is
+{cmd:attyear(_year)}.
+
+{phang}{cmd:survprob}{cmd:(}{it:varname}{cmd:)} specifies the variable
+in the {cmd:using} file that contains the general-population survival
+probabilities.  The default is {cmd:survprob(prob)}.
+
+{phang}{cmd:maxage}{cmd:(}{it:#}{cmd:)} specifies the maximum age
+for which general-population survival probabilities are provided in the
+{cmd:using} file.  Probabilities for individuals older than this value
+are assumed to be the same as for the maximum age.  The default is
+{cmd:maxage(99)}.
+
+{phang}{cmd:potfu}{cmd:(}{it:varname}{cmd:)} specifies the variable
+containing the last time of potential follow-up.  This option is required for
+calculating Hakulinen estimates of expected survival and causes
+{cmd:strs} to report Hakulinen estimates by default.  The variable must
+be in the same time units as the exit time, and a variable containing the
+time origin must be specified; in practice, it is recommended that
+{cmd:potfu()} specify a variable containing a date and that the data be
+{cmd:stset} by specifying the dates of entry and exit with the entry
+date as the time origin. For example:
+
+{phang2}{cmd:. stset exit, origin(dx) failure(status==1 2) id(id) scale(365.24)}{p_end}
+{phang2}{cmd:. generate long potfu = date("31/12/1995","dmy")}{p_end}
+{phang2}{cmd:. strs using popmort, breaks(0(1)20) mergeby(_year sex _age) potfu(potfu)}{p_end}
+
+{phang}{cmd:ederer1} specifies that Ederer I estimates be calculated and
+causes {cmd:strs} to report these by default (unless {cmd:potfu()} is
+also specified).
+
+{phang}{cmd:pohar} specifies that the Pohar Perme (Pohar Perme, Stare, and
+Est{c e'g}ve 2012) estimates of net survival be calculated and causes
+{cmd:strs} to report these by default (unless {cmd:potfu()} is also
+specified).  See {cmd:four_methods.do}, distributed with the {cmd:strs}
+package.
+
+{phang}{cmd:ht} specifies that survival be estimated by transforming the
+estimated cumulative hazard.  {cmd:ht} can be specified with Ederer II (the
+default), Hakulinen ({cmd:potfu()}), and Pohar Perme ({cmd:pohar}), but not
+with Ederer I ({cmd:ederer1}).  The hazard transformation approach is the
+default when late entry is detected (for example, period analysis);
+otherwise, survival is estimated using an actuarial approach.
+The two approaches provide similar estimates other than when data are
+very sparse.  The Pohar Perme estimator with the hazard transformation
+approach ({cmd:ht} option) is identical to the algorithm used in
+the user-written command {cmd:stnet}.
+
+{phang}{cmd:calyear} causes {cmd:strs} to split follow-up by each calendar
+year, resulting in slightly more accurate estimates but at the expense of
+computational efficiency.  {cmd:calyear} is available for use only with the
+{cmdab:pohar} option or Ederer II estimation (the default).  
+
+{phang}{cmd:cuminc} specifies that cumulative incidence of death due to
+cancer ({cmd:ci_dc}) and cumulative incidence of death due to causes other
+than cancer ({cmd:ci_do}) be calculated using the method of Cronin and Feuer
+(2000).  Note that the cumulative incidence of death due to cancer is
+estimated in the presence of competing risks, so it will be lower than (1
+minus relative survival) because the latter is assumed to be in the absence of
+competing risks.
+See {browse "http://www.pauldickman.com/rsmodel/stata_colon/strs_technical_140.pdf":strs_technical_140.pdf}
+for details of how this is implemented for period analysis.
+
+{phang}{cmd:standstrata}{cmd:(}{it:varname}{cmd:)} specifies a variable
+defining strata across which to average the cumulative survival
+estimate.  With this option, a {it:weight} must also be specified as follows: 
+{cmd:[iweight=}{it:varname}{cmd:]}.
+
+{phang}{cmd:brenner} specifies that the age standardization be performed
+using the approach proposed by Brenner et al. (2004).  This option
+requires that {cmd:standstrata()} (and, therefore,
+{cmd:[iweight=}{it:varname}{cmd:]}) is also specified.
+
+{phang}{cmd:list}{cmd:(}{it:varlist}{cmd:)} specifies the variables to
+be listed in the life tables.  The variables {cmd:start} and {cmd:end}
+are included by default; however, if only one of these is specified in the
+{cmd:list()} option, then the other is suppressed.
+
+{phang}{cmd:keep}{cmd:(}{it:varlist}{cmd:)} restricts the variables to
+be written to the individual-level output dataset (named
+{cmd:individ.dta} by default).  This option requires that {cmd:save()} or
+{cmd:saveind()} is also specified.
+
+{phang}{cmd:format(%}{it:fmt}{cmd:)} specifies the format for variables
+containing survival estimates.  The default is {cmd:format(%6.4f)}.
+
+{phang}{cmd:notables} suppresses display of the life tables.
+
+{phang}{cmd:level}{cmd:(}{it:#}{cmd:)} sets the confidence level based
+on the value of global macro {cmd:S_level}.  The default is {cmd:level(95)}.
+
+{phang}{cmd:save}[{cmd:(replace)}] creates two output datasets:
+{cmd:individ.dta} and {cmd:grouped.dta}.  The {cmd:individ.dta} dataset
+contains one observation for each patient for each life-table interval,
+and {cmd:grouped.dta} contains one observation for each life-table
+interval.  Use {cmd:save}{cmd:(replace)} to overwrite these files.
+Excess mortality (relative survival) may be modeled using these output
+datasets.
+
+{phang}{cmd:savstand(}{it:filename}[{cmd:, replace}]{cmd:)} specifies
+that standardized estimates be saved to an output dataset.
+
+{phang}{cmd:savind(}{it:filename}[{cmd:, replace}]{cmd:)} and
+{cmd:savgroup(}{it:filename}[{cmd:, replace}]{cmd:)} specify
+alternative filenames for the individual and grouped output
+datasets, respectively.
+
+
+{title:Examples}
+
+{pstd}Ederer II estimates (the default) by sex{p_end}
+{phang2}{cmd:. strs using popmort, breaks(0(1)10) mergeby(_year sex _age) by(sex)}{p_end}
+
+{pstd}Ederer I estimates by sex{p_end}
+{phang2}{cmd:. strs using popmort, breaks(0(0.5)10) mergeby(_year sex _age) by(sex) ederer1}{p_end}
+
+{pstd}Hakulinen estimates by sex{p_end}
+{phang2}{cmd:. strs using popmort, breaks(0(0.5)2 3(1)10) mergeby(_year sex _age) by(sex) potfu(potfu)}{p_end}
+
+{pstd}Ederer I, Ederer II, Hakulinen, and Pohar Perme estimates in the same
+life table (see {cmd:four_methods.do}, distributed with the {cmd:strs}
+package){p_end}
+{phang2}{cmd:. strs using popmort, breaks(0(1)21) mergeby(_year sex _age) by(sex) potfu(potfu) ederer1 pohar list(n d w cp cp_e1 cr_e1 cp_e2 cr_e2 cp_hak cr_hak cns_pp) f(%7.5f)}{p_end}
+
+
+    {title:Estimation using a period approach}
+
+{pstd}The approach is to first {helpb stset} the data with calendar time as
+the timescale.  For example, we might be interested in the time period between 1 January 1994 and 31 December 1995.{p_end}
+
+{phang2}{cmd:. stset exit, origin(dx) enter(time mdy(1,1,1994)) failure(status==1 2) id(id) scale(365.25)}{p_end} 
+
+{pstd}If an individual dies before the start of the period window, the record
+is marked with {cmd:_st=0} and is not considered in analysis for the Ederer II
+estimate.  However, the record does contribute to the analysis for the
+Hakulinen estimate, so the records marked with {cmd:_st=0} must not be dropped
+from the dataset.{p_end}
+
+{pstd}We then can apply {cmd:strs} in the usual manner to get Ederer II
+estimates,{p_end}
+
+{phang2}{cmd:. strs using popmort, breaks(0(1)10) mergeby(_year sex _age) by(sex)}{p_end}
+
+{pstd}or to get Hakulinen estimates,{p_end}
+
+{phang2}{cmd:. strs using popmort, breaks(0(1)10) mergeby(_year sex _age) by(sex) potfu(potfu)}{p_end}
+
+{p 4 8 2}See {cmd:survival_period.do}, distributed with the {cmd:strs} package.
+
+
+    {title:Cumulative incidence of death in the presence of competing risks}
+
+{phang2}{cmd:. strs using popmort, breaks(0(1)10) mergeby(_year sex _age) by(sex) cuminc}{p_end}
+
+
+    {title:Age-standardized estimates of relative survival}
+
+{pstd}To age-standardize using traditional direct standardization, we could specify the following command:{p_end}
+
+{phang2}{cmd:. strs using popmort [iweight=standwei], breaks(0(1)10) mergeby(_year sex _age) by(sex) standstrata(agegroup)}{p_end}
+ 
+{pstd}{cmd:strs} first constructs life tables for each level of sex and
+age group and then calculates age-standardized estimates for each sex by
+weighting the age-specific estimates using the weights specified in the
+variable {cmd:standwei}.  The strata across which to average are defined
+using the {cmdab:standstrata()} option.  A variable
+containing the weights (which must be less than 1) must exist in the
+dataset and be specified using {cmdab:iweight}.{p_end}
+
+{pstd}Standard errors are estimated using the approach described by
+Corazziari, Quinn, and Capocaccia (2004).{p_end}
+
+{pstd}We can also apply the traditional standardization to the estimates of
+the cumulative probabilities of death:{p_end}
+
+{phang2}{cmd:. strs using popmort [iw=standwei], breaks(0(1)10) mergeby(_year sex _age) by(sex) standstrata(agegroup) cuminc}{p_end}
+
+{pstd}Brenner et al. (2004) proposed an alternative approach to
+age standardization of cancer survival rates.  Weights are individually
+assigned to all patients, and a weighted life table is constructed.  For
+example, if a patient has weight 1.8, then this patient contributes 1.8
+units to the "at risk" column at entry and 1.8 units to the "deaths"
+column at death (or the "withdrawal" column at censoring).  Weights are
+higher than 1 in age groups underrepresented in the study population
+compared with the standard population and vice versa.  For example, let
+{cmd:s} be the proportion of patients in each age group of the standard
+population, and let {cmd:r} be the corresponding proportion in the study
+population.  Weights are computed as follows:{p_end}
+
+{center:                                     weights}
+{center:Age Groups      {cmd:s}        {cmd:r}        {cmd: s/r}}
+{center:{hline 45}}
+{center: 0-44         {cmd:0.164     0.047       3.46}}
+{center:45-54         {cmd:0.143     0.083       1.73}}
+{center:55-64         {cmd:0.202     0.186       1.08}}
+{center:65-74         {cmd:0.208     0.322       0.65}}
+{center:  75+         {cmd:0.283     0.362       0.51}}
+{center:{hline 45}}
+
+{pstd}If the weights ({cmd:s}) are stored in the variable
+{cmd:standwei}, then specifying the {cmdab:brenner} option leads
+{cmd:strs} to calculate and assign the individual weights to all
+patients and construct a weighted life table.{p_end}
+
+{phang2}{cmd:. strs using popmort [iw=standwei], breaks(0(1)10) mergeby(_year sex _age) by(sex) potfu(potfu) brenner standstrata(agegroup)}
+
+{pstd}In this case, {cmd:strs} does not compute crude estimates for each level of age group; only standardized estimates for each sex are tabulated.{p_end} 
+
+    {title:Modeling excess mortality}
+
+{pstd}Excess mortality can be modeled using various approaches (Dickman
+et al. 2004).  A life table must first be estimated for all combinations
+of explanatory variables (only categorical variables are supported). The
+following example shows how we can fit a Poisson regression model for
+excess mortality adjusting for follow-up time (in five annual
+intervals), gender, period of diagnosis, and age at diagnosis:{p_end}
+
+{phang2}{cmd:. strs using popmort, breaks(0(1)5) mergeby(_year sex _age) by(sex year8594 agegrp) save(replace)}{p_end}
+{phang2}{cmd:. use grouped, clear}{p_end}
+{phang2}{cmd:. glm d i.end i.sex i.year8594 i.agegrp, family(pois) link(rs d_star) lnoffset(y) eform}{p_end}
+
+{pstd}The parameter estimates are interpreted as log excess-hazard
+ratios.  The Hakulinen-Tenkanen (1987) model can be fit to the same
+data as follows:{p_end}
+
+{phang2}{cmd:. glm ns i.end i.sex i.year8594 i.agegrp, family(bin n_prime) link(ht p_star) eform}{p_end}
+
+{pstd}To estimate the model using the Est{c e'g}ve et al. (1990)
+full-likelihood approach, we use the individual rather than the grouped data.{p_end}
+
+{phang2}{cmd:. use individ, clear}{p_end}
+{phang2}{cmd:. ml model lf esteve (d=i.end i.sex i.year8594 i.agegrp)}{p_end}
+{phang2}{cmd:. ml maximize, eform("RER")}{p_end}
+
+
+{title:References}
+
+{phang} Brenner, H., V. Arndt, O. Gefeller, and T. Hakulinen. 
+2004.
+An alternative approach to age adjustment of cancer survival rates.
+{it:European Journal of Cancer} 40: 2317-2322.
+
+{phang} Corazziari, I., M. Quinn, and R. Capocaccia.  2004.
+Standard cancer patient population for age standardising survival ratios.
+{it:European Journal of Cancer} 40: 2307-2316.
+
+{phang} Cronin, K. A., and E. J. Feuer.  2000.
+Cumulative cause-specific mortality for cancer patients in the presence of other causes: A crude analogue of relative survival.
+{it:Statistics in Medicine} 19: 1729-1740.
+
+{phang} Dickman, P. W., and H. O. Adami.  2006.
+Interpreting trends in cancer patient survival.
+{it:Journal of Internal Medicine} 260: 103-117.
+
+{phang} Dickman, P. W., A. Sloggett, M. Hills, and T. Hakulinen.  2004. 
+Regression models for relative survival.
+{it:Statistics in Medicine} 23: 51-64.
+
+{phang}Est{c e'g}ve, J., E. Benhamou, M. Croasdale, and L. Raymond.  1990.
+Relative survival and the estimation of net survival: Elements for further discussion.
+{it:Statistics in Medicine} 5: 529-538.
+
+{phang}Hakulinen, T., and L. Tenkanen.  1987.  Regression analyses of relative
+survival rates.  {it:Applied Statistics} 36: 309-317.
+
+{phang} Pohar Perme, M.,  J. Stare, and J. Est{c e'g}ve.  2012. 
+On estimation in relative survival.
+{it:Biometrics} 68: 113-120.
+
+
+{title:Authors}
+
+{pstd}Paul W. Dickman{p_end}
+{pstd}Karolinska Institutet{p_end}
+{pstd}Stockholm, Sweden{p_end}
+{pstd}{browse "mailto:paul.dickman@ki.se":paul.dickman@ki.se}{p_end}
+
+{pstd}Enzo Coviello{p_end}
+{pstd}Statistics and Epidemiology Unit{p_end}
+{pstd}ASL BT{p_end}
+{pstd}Barletta, Italy{p_end}
+{pstd}enzo.coviello@tin.it{p_end}
+
+
+{marker also_see}{...}
+{title:Also see}
+
+{p 4 14 2}Article:  {it:Stata Journal}, volume 15, number 1: {browse "http://www.stata-journal.com/article.html?article=st0376":st0376}
+
+{p 7 14 2}Help:  {helpb stexpect}, {helpb stnet} (if installed),{break}
+{manhelp ltable ST}
+{p_end}
