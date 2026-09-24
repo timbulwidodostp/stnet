@@ -2,4 +2,4 @@
 1
 2
 3
-p seqtte Sequential target trial emulation Use seqtte With STATA 19
+p stnet Estimating net survival Use stnet With STATA 19
